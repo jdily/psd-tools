@@ -3,6 +3,7 @@ Layer module.
 """
 from __future__ import absolute_import, unicode_literals
 import logging
+from multiprocessing.sharedctypes import Value
 
 from psd_tools.constants import BlendMode, Tag
 from psd_tools.api.effects import Effects
@@ -131,7 +132,7 @@ class Layer(object):
     @blend_mode.setter
     def blend_mode(self, value):
         self._record.blend_mode = BlendMode(value)
-
+    
     @property
     def left(self):
         """
@@ -171,6 +172,12 @@ class Layer(object):
         """
         return self._record.right
 
+    @right.setter
+    def right(self, value):
+        w = self.width
+        self._record.right = int(value)
+        self._record.left = int(value)-w
+
     @property
     def bottom(self):
         """
@@ -180,6 +187,12 @@ class Layer(object):
         """
         return self._record.bottom
 
+    @bottom.setter
+    def bottom(self, value):
+        h = self.height
+        self._record.bottom = int(value)
+        self._record.top = int(value) - h
+
     @property
     def width(self):
         """
@@ -188,7 +201,7 @@ class Layer(object):
         :return: int
         """
         return self.right - self.left
-
+        
     @property
     def height(self):
         """
@@ -210,6 +223,14 @@ class Layer(object):
     @offset.setter
     def offset(self, value):
         self.left, self.top = tuple(int(x) for x in value)
+
+    @property
+    def botright(self):
+        return self.right, self.bottom
+
+    @botright.setter
+    def botright(self, value):
+        self.right, self.bottom = tuple(int(x) for x in value) 
 
     @property
     def size(self):
@@ -502,6 +523,16 @@ class Layer(object):
             ' effects' if self.has_effects() else '',
         )
 
+    def resize(self, 
+               new_size, 
+               new_pos):
+        """
+        Resize this layer.
+        This should be defined using different type layers.
+        
+        :return: ??
+        """
+        pass
 
 class GroupMixin(object):
     @property
