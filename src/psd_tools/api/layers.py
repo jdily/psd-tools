@@ -529,7 +529,7 @@ class Layer(object):
         """
         Resize this layer.
         This should be defined using different type layers.
-        
+
         :return: ??
         """
         pass
@@ -801,7 +801,16 @@ class PixelLayer(Layer):
         composed_image = layer.compose()
         composed_image.save('composed-layer.png')
     """
-    pass
+    def resize(self, 
+               new_size, 
+               new_pos):
+        """
+        Resize this layer.
+        This should be defined using different type layers.
+        
+        :return: ??
+        """
+        print('resize image...')
 
 
 class SmartObjectLayer(Layer):
