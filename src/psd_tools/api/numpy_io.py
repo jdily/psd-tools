@@ -16,6 +16,12 @@ EXPECTED_CHANNELS = {
     ColorMode.LAB: 3,
 }
 
+def set_array(layer, channel, _data, **kwargs):
+    if layer.kind == "psdimage":
+        pass
+    else:
+        print('set layer data')
+        set_layer_data(layer, channel, _data)
 
 def get_array(layer, channel, **kwargs):
     if layer.kind == 'psdimage':
@@ -52,10 +58,39 @@ def get_image_data(psd, channel):
 
     return data
 
+## set_data -> numpy array
+## TODO: set data with the same size.
+def set_layer_data(layer, channel, _data, real_mask=True):
+    depth, version = layer._psd.depth, layer._psd.version
+    iterator = zip(layer._record.channel_info, layer._channels)
+    ## only take RGB
+    condition = lambda x: x.id >= 0
+    channels = [
+        _parse_array(data.get_data(layer.width, layer.height, depth, version), depth)
+        for info, data in iterator
+        if condition(info) and len(data.data) > 0
+    ]
+    # print(channels[0].shape)
+    # input('')
+    layer._channels[1].set_data(_data[:,0].tobytes(), _data.shape[1], _data.shape[0], depth, version)
+    layer._channels[2].set_data(_data[:,1].tobytes(), _data.shape[1], _data.shape[0], depth, version)
+    layer._channels[3].set_data(_data[:,2].tobytes(), _data.shape[1], _data.shape[0], depth, version)
+    # channels[0].set_data(_data[:,0].tobytes(), _data.shape[1], _data.shape[0], depth, version)
+    # channels[1].set_data(_data[:,1].tobytes(), _data.shape[1], _data.shape[0], depth, version)
+    # channels[2].set_data(_data[:,2].tobytes(), _data.shape[1], _data.shape[0], depth, version)
+
+    condition = lambda x: x.id == ChannelID.TRANSPARENCY_MASK 
+    # channels = [
+    #     _parse_array(data.get_data(layer.width, layer.height, depth, version), depth)
+    #     for info, data in iterator
+    #     if condition(info) and len(data.data) > 0
+    # ] 
+    layer._channels[0].set_data(_data[:,3].tobytes(), _data.shape[1], _data.shape[0], depth, version)
 
 def get_layer_data(layer, channel, real_mask=True):
     def _find_channel(layer, width, height, condition):
         depth, version = layer._psd.depth, layer._psd.version
+        # print(f'layer channels : {len(layer._channels)}')
         iterator = zip(layer._record.channel_info, layer._channels)
         channels = [
             _parse_array(data.get_data(width, height, depth, version), depth)

@@ -228,6 +228,7 @@ class Layer(object):
     def botright(self):
         return self.right, self.bottom
 
+    ## ichao added
     @botright.setter
     def botright(self, value):
         self.right, self.bottom = tuple(int(x) for x in value) 
@@ -411,6 +412,12 @@ class Layer(object):
         """
         from .numpy_io import get_array
         return get_array(self, channel, real_mask=real_mask)
+
+    def set_channel_numpy(self, channel=None, _data=None):
+        from .numpy_io import set_array
+        if _data is not None:
+            set_array(self, channel, _data)
+        
 
     def composite(
         self,
