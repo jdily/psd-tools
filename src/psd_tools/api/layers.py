@@ -413,6 +413,7 @@ class Layer(object):
         from .numpy_io import get_array
         return get_array(self, channel, real_mask=real_mask)
 
+    ## set _data to the channel (temporally only for RGB image)
     def set_channel_numpy(self, channel=None, _data=None):
         from .numpy_io import set_array
         if _data is not None:
@@ -818,6 +819,16 @@ class PixelLayer(Layer):
         :return: ??
         """
         print('resize image...')
+    
+    def move_layer(self, new_pos=(0,0)):
+        """
+        Move this layer.
+        move the position of the top-left corner
+        
+        :return: ??
+        """
+        print('move image...')
+        self.offset = (self.left+new_pos[0], self.top+new_pos[1])
 
 
 class SmartObjectLayer(Layer):
