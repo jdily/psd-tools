@@ -53,7 +53,6 @@ def convert_image_data_to_pil(psd, channel, apply_icc):
     """Convert ImageData to PIL Image.
     """
     from PIL import Image
-
     assert channel is None or channel < psd.channels, (
         'Invalid channel specified: %s' % channel
     )

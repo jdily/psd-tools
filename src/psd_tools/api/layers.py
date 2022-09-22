@@ -378,7 +378,7 @@ class Layer(object):
             :py:class:`PIL.Image`. For example, 'CMYK' mode cannot include
             alpha channel in PIL. In this case, topil drops alpha channel.
         """
-        from .pil_io import convert_layer_to_pil
+        from .pil_io import convert_layer_to_pil 
         return convert_layer_to_pil(self, channel, apply_icc)
 
     @deprecated

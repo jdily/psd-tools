@@ -2,7 +2,7 @@ import numpy as np
 import logging
 
 from psd_tools.constants import ChannelID, Tag, ColorMode, Resource
-
+import sys
 logger = logging.getLogger(__name__)
 
 EXPECTED_CHANNELS = {
@@ -20,12 +20,14 @@ def set_array(layer, channel, _data, **kwargs):
     if layer.kind == "psdimage":
         pass
     else:
-        print('set layer data')
-        set_layer_data(layer, channel, _data)
+        # print('set layer data')
+        set_layer_data(layer, channel, _data, **kwargs)
 
 def get_array(layer, channel, **kwargs):
     if layer.kind == 'psdimage':
         return get_image_data(layer, channel)
+    elif layer.kind == 'pixel':
+        return get_pixel_data(layer, channel)
     else:
         return get_layer_data(layer, channel, **kwargs)
     return None
@@ -58,34 +60,70 @@ def get_image_data(psd, channel):
 
     return data
 
+## TODO: write this function follow the original coding style.    
+def get_pixel_data(layer, channel):
+    print('get pixel data')
+    channels = []
+    for info in layer._record.channel_info:
+        width, height = layer.width, layer.height
+        index = {info.id: i for i, info in enumerate(layer._record.channel_info)}
+        depth = layer._psd.depth
+        channel_data = layer._channels[index[info.id]]
+        if width == 0 or height == 0 or len(channel_data.data) == 0:
+            channels.append(None)   
+        channel = channel_data.get_data(width, height, depth, layer._psd.version)
+        channel_arr = np.frombuffer(channel, '>u1')
+        channels.append(channel_arr)
+    channels.append(channels[0])
+    channels.pop(0)
+    image_data = np.stack(channels, axis=1).reshape(layer.height, layer.width, 4)
+    return image_data
+
 ## set_data -> numpy array
-## TODO: set data with the same size.
 def set_layer_data(layer, channel, _data, real_mask=True):
     depth, version = layer._psd.depth, layer._psd.version
     iterator = zip(layer._record.channel_info, layer._channels)
+    index = {info.id: i for i, info in enumerate(layer._record.channel_info)}
+    width, height = layer.width, layer.height 
+    # for info in layer._record.channel_info:
+    #     if index[info.id] == 0:
+    #         layer._channels[index[info.id]].set_data(_data[:,-1].tobytes(), height, width, depth, version)
+    #     else:
+    #         layer._channels[index[info.id]].set_data(_data[:,index[info.id]-1].tobytes(), height, width, depth, version) 
     ## only take RGB
-    condition = lambda x: x.id >= 0
-    channels = [
-        _parse_array(data.get_data(layer.width, layer.height, depth, version), depth)
-        for info, data in iterator
-        if condition(info) and len(data.data) > 0
-    ]
+    # condition = lambda x: x.id >= 0
+    # channels = [
+    #     _parse_array(data.get_data(layer.width, layer.height, depth, version), depth)
+    #     for info, data in iterator
+    #     if condition(info) and len(data.data) > 0
+    # ]
+    for info, data in iterator:
+        print(sys.getsizeof(data))
+        if info.id == 0:
+            data.set_data(_data[:,0].tobytes(), width, height, depth, version)
+        elif info.id == 1:
+            data.set_data(_data[:,1].tobytes(), width, height, depth, version)
+        elif info.id == 2:
+            data.set_data(_data[:,2].tobytes(), width, height, depth, version)
+        # elif info.id == -1:
+        #     data.set_data(_data[:,3].tobytes(), _data.shape[1], _data.shape[0], depth, version) 
     # print(channels[0].shape)
     # input('')
-    layer._channels[1].set_data(_data[:,0].tobytes(), _data.shape[1], _data.shape[0], depth, version)
-    layer._channels[2].set_data(_data[:,1].tobytes(), _data.shape[1], _data.shape[0], depth, version)
-    layer._channels[3].set_data(_data[:,2].tobytes(), _data.shape[1], _data.shape[0], depth, version)
+    # layer._channels[1].set_data(_data[:,0].tobytes(), _data.shape[1], _data.shape[0], depth, version)
+    # layer._channels[2].set_data(_data[:,1].tobytes(), _data.shape[1], _data.shape[0], depth, version)
+    # layer._channels[3].set_data(_data[:,2].tobytes(), _data.shape[1], _data.shape[0], depth, version)
     # channels[0].set_data(_data[:,0].tobytes(), _data.shape[1], _data.shape[0], depth, version)
     # channels[1].set_data(_data[:,1].tobytes(), _data.shape[1], _data.shape[0], depth, version)
     # channels[2].set_data(_data[:,2].tobytes(), _data.shape[1], _data.shape[0], depth, version)
 
-    condition = lambda x: x.id == ChannelID.TRANSPARENCY_MASK 
+    # condition = lambda x: x.id == ChannelID.TRANSPARENCY_MASK
+    # for info, data in iterator 
     # channels = [
     #     _parse_array(data.get_data(layer.width, layer.height, depth, version), depth)
     #     for info, data in iterator
     #     if condition(info) and len(data.data) > 0
     # ] 
-    layer._channels[0].set_data(_data[:,3].tobytes(), _data.shape[1], _data.shape[0], depth, version)
+    # layer._channels[0].set_data(_data[:,3].tobytes(), _data.shape[1], _data.shape[0], depth, version)
 
 def get_layer_data(layer, channel, real_mask=True):
     def _find_channel(layer, width, height, condition):
