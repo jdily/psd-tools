@@ -12,7 +12,7 @@ from psd_tools.api.shape import VectorMask, Stroke, Origination
 from psd_tools.api.smart_object import SmartObject
 
 from psd_tools.api import deprecated
-
+import numpy as np
 logger = logging.getLogger(__name__)
 
 
@@ -228,7 +228,7 @@ class Layer(object):
     def botright(self):
         return self.right, self.bottom
 
-    ## ichao added
+    ## jdily added
     @botright.setter
     def botright(self, value):
         self.right, self.bottom = tuple(int(x) for x in value) 
@@ -810,17 +810,29 @@ class PixelLayer(Layer):
         composed_image.save('composed-layer.png')
     """
     def resize(self, 
-               new_size, 
-               new_pos):
+               new_size):
         """
         Resize this layer.
         This should be defined using different type layers.
-        
+        Fix the top left corner
+
         :return: ??
         """
         print('resize image...')
-    
-    def move_layer(self, new_pos=(0,0)):
+        ## take the original PIL image out
+        ori_pil_img = self.topil()
+        ## resize the PIL image to desire size
+        resized_pil_img = ori_pil_img.resize(new_size).convert('RGB')
+        resized_img_data = np.array(resized_pil_img)
+        return resized_pil_img, resized_img_data
+        # print(f'resized img data size: {resized_img_data.shape}')
+        # self._record.right = self._record.left + new_size[0]
+        # self._record.bottom = self._record.top + new_size[1]
+        # print(f'({self._record.left}, {self._record.top}), ({self._record.right}, {self._record.bottom})')
+        # self.set_channel_numpy(resized_img_data.reshape(new_size[0]*new_size[1], 3))
+
+
+    def move(self, new_pos=(0,0)):
         """
         Move this layer.
         move the position of the top-left corner
