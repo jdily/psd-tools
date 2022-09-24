@@ -1,3 +1,4 @@
+from ctypes import sizeof
 import numpy as np
 import logging
 
@@ -20,7 +21,6 @@ def set_array(layer, channel, _data, **kwargs):
     if layer.kind == "psdimage":
         pass
     else:
-        # print('set layer data')
         set_layer_data(layer, channel, _data, **kwargs)
 
 def get_array(layer, channel, **kwargs):
@@ -32,7 +32,7 @@ def get_array(layer, channel, **kwargs):
         return get_layer_data(layer, channel, **kwargs)
     return None
 
-
+## TODO: test mask... what is user layer mask
 def get_image_data(psd, channel):
     if (channel == 'mask'
         ) or (channel == 'shape' and not has_transparency(psd)):
@@ -83,15 +83,12 @@ def set_layer_data(layer, channel, _data):
     iterator = zip(layer._record.channel_info, layer._channels)
     index = {info.id: i for i, info in enumerate(layer._record.channel_info)}
     width, height = layer.width, layer.height 
-    for info, data in iterator:
+    for info, data in iterator: 
         if info.id >= 0:
             data.set_data(_data[:, info.id].tobytes(), width, height, depth, version)
-        # if info.id == 0:
-        #     data.set_data(_data[:,0].tobytes(), width, height, depth, version)
-        # elif info.id == 1:
-        #     data.set_data(_data[:,1].tobytes(), width, height, depth, version)
-        # elif info.id == 2:
-        #     data.set_data(_data[:,2].tobytes(), width, height, depth, version)
+        else:
+            ## TODO: make sure this wont bring any trouble (RGBA)
+            data.set_data(_data[:, 3].tobytes(), width, height, depth, version)
 
 def get_layer_data(layer, channel, real_mask=True):
     def _find_channel(layer, width, height, condition):

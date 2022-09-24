@@ -168,6 +168,7 @@ def convert_thumbnail_to_pil(thumbnail, mode='RGB'):
 def _merge_channels(layer):
     from PIL import Image
     mode = get_pil_mode(layer._psd.color_mode)
+    # channels = []
     channels = [
         _get_channel(layer, info.id) for info in layer._record.channel_info
         if info.id >= 0

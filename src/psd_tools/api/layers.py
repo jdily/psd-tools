@@ -224,14 +224,14 @@ class Layer(object):
     def offset(self, value):
         self.left, self.top = tuple(int(x) for x in value)
 
-    @property
-    def botright(self):
-        return self.right, self.bottom
+    # @property
+    # def botright(self):
+    #     return self.right, self.bottom
 
-    ## jdily added
-    @botright.setter
-    def botright(self, value):
-        self.right, self.bottom = tuple(int(x) for x in value) 
+    # ## jdily added
+    # @botright.setter
+    # def botright(self, value):
+    #     self.right, self.bottom = tuple(int(x) for x in value) 
 
     @property
     def size(self):
@@ -531,16 +531,19 @@ class Layer(object):
             ' effects' if self.has_effects() else '',
         )
 
-    def resize(self, 
-               new_size, 
-               new_pos):
+    def move(self, move_offset=(0,0), mode='tl'):
         """
-        Resize this layer.
-        This should be defined using different type layers.
-
-        :return: ??
+        Move this layer.
+        move the position of the top-left corner
+        
+        :return: None
         """
-        pass
+        if mode == "tl":
+            self.offset = (self.left+move_offset[0], self.top+move_offset[1])
+        elif mode == "br":
+            pass
+        elif mode == "center":
+            pass
 
 class GroupMixin(object):
     @property
@@ -816,31 +819,17 @@ class PixelLayer(Layer):
         This should be defined using different type layers.
         Fix the top left corner
 
-        :return: ??
-        """
-        print('resize image...')
-        ## take the original PIL image out
-        ori_pil_img = self.topil()
-        ## resize the PIL image to desire size
-        resized_pil_img = ori_pil_img.resize(new_size).convert('RGB')
-        resized_img_data = np.array(resized_pil_img)
-        return resized_pil_img, resized_img_data
-        # print(f'resized img data size: {resized_img_data.shape}')
-        # self._record.right = self._record.left + new_size[0]
-        # self._record.bottom = self._record.top + new_size[1]
-        # print(f'({self._record.left}, {self._record.top}), ({self._record.right}, {self._record.bottom})')
-        # self.set_channel_numpy(resized_img_data.reshape(new_size[0]*new_size[1], 3))
-
-
-    def move(self, new_pos=(0,0)):
-        """
-        Move this layer.
-        move the position of the top-left corner
+        new_size: (new_width, new_height)
         
-        :return: ??
+        :return: None
         """
-        print('move image...')
-        self.offset = (self.left+new_pos[0], self.top+new_pos[1])
+        ori_pil_img = self.topil()
+        resized_pil_img = ori_pil_img.resize((new_size[0], new_size[1]))
+        resized_img_data = np.array(resized_pil_img)
+        resized_img_data = np.ascontiguousarray(resized_img_data, dtype='u1')
+        self._record.right = self._record.left + new_size[0]
+        self._record.bottom = self._record.top + new_size[1]
+        self.set_channel_numpy(_data=resized_img_data.reshape(new_size[0]*new_size[1], 4))
 
 
 class SmartObjectLayer(Layer):
@@ -943,6 +932,9 @@ class TypeLayer(Layer):
         """Warp configuration."""
         return self._data.warp
 
+    def resize(self, new_size):
+        pass
+
 
 class ShapeLayer(Layer):
     """
@@ -996,7 +988,9 @@ class ShapeLayer(Layer):
             else:
                 self._bbox = (0, 0, 0, 0)
         return self._bbox
-
+    
+    def resize(self, new_size):
+        pass
 
 class AdjustmentLayer(Layer):
     """Layer that applies specified image adjustment effect."""
@@ -1038,3 +1032,6 @@ class FillLayer(Layer):
     @property
     def bottom(self):
         return self._record.bottom or self._psd.height
+
+    def resize(self, new_size):
+        pass

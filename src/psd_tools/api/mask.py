@@ -41,6 +41,15 @@ class Mask(object):
             return self._data.real_left
         return self._data.left
 
+    @left.setter
+    def left(self, value):
+        if self._has_real():
+            self._data.real_left = int(value)
+            self._data.real_right = int(value) + self.width
+        else:
+            self._data.left = int(value)
+            self._data.right = int(value) + self.width 
+
     @property
     def right(self):
         """Right coordinate."""
@@ -54,6 +63,15 @@ class Mask(object):
         if self._has_real():
             return self._data.real_top
         return self._data.top
+
+    @top.setter
+    def top(self, value):
+        if self._has_real():
+            self._data.real_top = int(value)
+            self._data.real_bottom = int(value) + self.height
+        else:
+            self._data.top = int(value)
+            self._data.bottom = int(value) + self.height
 
     @property
     def bottom(self):
@@ -124,3 +142,33 @@ class Mask(object):
             self.width,
             self.height,
         )
+
+    @property
+    def offset(self):
+        """
+        (left, top) tuple. Writable.
+
+        :return: `tuple`
+        """
+        return self.left, self.top
+
+    @offset.setter
+    def offset(self, value):
+        self.left, self.top = tuple(int(x) for x in value)
+
+    ## TODO: check the moving range usign parent_bbox
+    def move(self, move_offset=(0,0), mode='tl', parent_bbox=None):
+        if mode == "tl":
+            exact_offset_x, exact_offset_y = 0, 0
+            if self.left+move_offset[0] < parent_bbox[0]:
+                exact_offset_x = self.left - parent_bbox[0]
+            else:
+                exact_offset_x = move_offset[0]
+            if self.top+move_offset[1] < parent_bbox[1]:
+                exact_offset_y = self.top - parent_bbox[1] 
+            else:
+                exact_offset_y = move_offset[1]
+        
+            self.offset = (self.left+exact_offset_x, self.top+exact_offset_y)
+        else:
+            pass
