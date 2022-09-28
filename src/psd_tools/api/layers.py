@@ -857,6 +857,23 @@ class SmartObjectLayer(Layer):
             self._smart_object = SmartObject(self)
         return self._smart_object
 
+    def resize(self, new_size):
+        from PIL import Image
+        import io
+        if self.smart_object.filetype == "png" or self.smart_object.filetype == "jpg":
+            # print(dir(self.smart_object))
+            print(self.smart_object.kind)
+            print(type(self.smart_object._data.data))
+            ori_pil_img = Image.open(io.BytesIO(self.smart_object.data))
+            new_width = ori_pil_img.size[0]
+            new_height = int(ori_pil_img.size[1]*0.7)
+            resized_pil_img = ori_pil_img.resize((new_width, new_height))
+            img_byte_arr = io.BytesIO()
+            resized_pil_img.save(img_byte_arr, format=ori_pil_img.format)
+            img_byte_arr = img_byte_arr.getvalue()
+            self.smart_object.data = img_byte_arr
+ 
+            
 
 class TypeLayer(Layer):
     """

@@ -8,7 +8,7 @@ import io
 import os
 
 from psd_tools.constants import Tag
-
+from psd_tools.compression import compress, decompress
 logger = logging.getLogger(__name__)
 
 
@@ -89,6 +89,12 @@ class SmartObject(object):
         else:
             with self.open() as f:
                 return f.read()
+    
+    ## TODO: should we compress it.
+    @data.setter
+    def data(self, input_data):
+        if self.kind == 'data':
+            self._data.data = input_data
 
     @property
     def unique_id(self):
